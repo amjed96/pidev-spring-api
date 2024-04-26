@@ -5,11 +5,15 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.java.Log;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @Log
@@ -18,6 +22,12 @@ public class JWTGenerator {
 
     public String generateToken(Authentication authentication) {
         String username = authentication.getName();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        List<String> roles = authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
         Date currentDate = new Date();
         Date expireDate = new Date(currentDate.getTime() + SecurityConstants.JWT_EXPIRATION);
         log.info("DATE GET TIME: "+currentDate.getTime());
@@ -25,6 +35,7 @@ public class JWTGenerator {
 
         String token = Jwts.builder()
                 .setSubject(username)
+                .claim("roles", roles)
                 .setIssuedAt(new Date())
                 .setExpiration(expireDate)
                 .signWith(key, SignatureAlgorithm.HS512)

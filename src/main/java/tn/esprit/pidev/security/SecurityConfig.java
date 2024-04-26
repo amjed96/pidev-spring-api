@@ -16,13 +16,23 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.util.Arrays;
+import java.util.Collections;
+
+import static org.springframework.http.HttpHeaders.*;
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // @Autowired
+    @Autowired
     private JwtAuthEntryPoint authEntryPoint;
+    private static final String WHITE_LIST_URL = "/api/auth/**";
 
     @Autowired
     public SecurityConfig(JwtAuthEntryPoint authEntryPoint) {
@@ -34,24 +44,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)//.csrf().disable()
-                .exceptionHandling()
-                .authenticationEntryPoint(authEntryPoint) // Delegate exception handling to JwtAuthEntryPoint
-                .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Make session STATELESS
-                .and()
-                .authorizeRequests()
-                .requestMatchers(HttpMethod.POST,"/api/auth/**").permitAll()
-                //.requestMatchers("/emplacement/**").hasRole("ADMIN")
-                /* TODO ORIGINAL FIX ROLE PROBLEM */
-                .requestMatchers(new AntPathRequestMatcher("/user/**"/*, "GET"*/)).hasRole("ADMIN")
-                .requestMatchers(new AntPathRequestMatcher("/emplacement/**")).hasRole("ADMIN") //.requestMatchers("/emplacement/**").hasRole("ADMIN")
-                .requestMatchers(new AntPathRequestMatcher("/adresse/**")).hasRole("ADMIN")
-                .requestMatchers(new AntPathRequestMatcher("/departement/**")).hasRole("ADMIN")
-                // TODO FINISH
-                .anyRequest().authenticated()
-                .and().httpBasic();
+                .cors(withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(req ->
+                        req.requestMatchers(
+                                // TODO RETURN WHEN FIX FRONTEND LOGIN
+                                // WHITE_LIST_URL
+                                "/**"
+                        ).permitAll()
+                                // TODO RETURN WHEN FIX FRONTEND LOGIN
+                                // .requestMatchers("/user/**").hasAuthority("ADMIN")
+                                // .requestMatchers("/emplacement/**").hasAuthority("ROLE_ADMIN")//.hasRole("ADMIN")
+                                // .requestMatchers("/adresse/**").hasAuthority("ADMIN")
+                                // .requestMatchers("/departement/**").hasAuthority("ADMIN")
+                                // .anyRequest().authenticated()
+                )
+                .exceptionHandling(e -> e.authenticationEntryPoint(authEntryPoint))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
         // HERE Add Filter
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
@@ -73,5 +83,28 @@ public class SecurityConfig {
     @Bean
     public JWTAuthenticationFilter jwtAuthenticationFilter() {
         return new JWTAuthenticationFilter();
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        final CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
+        config.setAllowedHeaders(Arrays.asList(
+                ORIGIN,
+                CONTENT_TYPE,
+                ACCEPT,
+                AUTHORIZATION
+        ));
+        config.setAllowedMethods(Arrays.asList(
+                "GET",
+                "POST",
+                "DELETE",
+                "PUT",
+                "PATCH"
+        ));
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
 }
