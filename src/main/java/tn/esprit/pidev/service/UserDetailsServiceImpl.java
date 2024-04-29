@@ -18,9 +18,7 @@ import tn.esprit.pidev.dto.AddUserDTO;
 import tn.esprit.pidev.dto.GetUserDTO;
 import tn.esprit.pidev.dto.LoginDTO;
 import tn.esprit.pidev.dto.RegisterDTO;
-import tn.esprit.pidev.model.Emplacement;
-import tn.esprit.pidev.model.Role;
-import tn.esprit.pidev.model.UserEntity;
+import tn.esprit.pidev.model.*;
 import tn.esprit.pidev.repository.EmplacementRepository;
 import tn.esprit.pidev.repository.RoleRepository;
 import tn.esprit.pidev.repository.UserRepository;
@@ -44,6 +42,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private EmplacementRepository emplacementRepository;
+    @Autowired
+    private EmplacementService emplacementService;
+    @Autowired
+    private AdresseService adresseService;
     // @Autowired
     // private AuthenticationManager authenticationManager; // TODO HERE
     @Autowired
@@ -136,6 +138,24 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         Role roles = roleRepository.findByName("ADMIN").orElseThrow(() -> new RuntimeException("Role not found"));
         user.setRoles(Collections.singletonList(roles));
+
+        Emplacement emplacement = new Emplacement();
+        emplacement.setNomEmpl(registerDTO.getNomEmpl());
+        emplacement.setType(Type.PRIMARY);
+
+        Adresse adresse = new Adresse();
+        adresse.setPays(registerDTO.getPaysEmpl());
+        adresse.setGouvernorat(registerDTO.getGouvernoratEmpl());
+        adresse.setVille(registerDTO.getVilleEmpl());
+        adresse.setRue(registerDTO.getRueEmpl());
+        adresse.setCodePostal(registerDTO.getCodePostalEmpl());
+
+        emplacement.setAdresse(adresse);
+
+        user.setEmplacement(emplacement);
+
+        adresseService.saveAdresse(adresse);
+        emplacementService.saveEmplacement(emplacement);
 
         userRepository.save(user);
         // return new ResponseEntity<>("User registered success!", HttpStatus.OK);

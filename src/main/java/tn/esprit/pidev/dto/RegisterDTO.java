@@ -9,4 +9,10 @@ public class RegisterDTO {
     private String email;
     private String username;
     private String password;
+    private String nomEmpl;
+    private String paysEmpl;
+    private String gouvernoratEmpl;
+    private String villeEmpl;
+    private String rueEmpl;
+    private int codePostalEmpl;
 }

@@ -55,7 +55,3 @@ public class Emplacement {
     }
 }
 
-enum Type {
-    PRIMARY,
-    SECONDARY
-}

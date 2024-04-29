@@ -59,7 +59,7 @@ public class SecurityConfig {
                                 // .requestMatchers("/departement/**").hasAuthority("ADMIN")
                                 // .anyRequest().authenticated()
                 )
-                .exceptionHandling(e -> e.authenticationEntryPoint(authEntryPoint))
+                .exceptionHandling(e -> e.authenticationEntryPoint(authEntryPoint)) // TODO CHECK IF WORKS LATER
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // HERE Add Filter

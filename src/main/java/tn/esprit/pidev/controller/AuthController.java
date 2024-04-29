@@ -14,8 +14,13 @@ import org.springframework.web.bind.annotation.RestController;
 import tn.esprit.pidev.dto.AuthResponseDTO;
 import tn.esprit.pidev.dto.LoginDTO;
 import tn.esprit.pidev.dto.RegisterDTO;
+import tn.esprit.pidev.model.Adresse;
+import tn.esprit.pidev.model.Emplacement;
 import tn.esprit.pidev.security.JWTGenerator;
+import tn.esprit.pidev.service.AdresseService;
+import tn.esprit.pidev.service.EmplacementService;
 import tn.esprit.pidev.service.UserDetailsServiceImpl;
+import tn.esprit.pidev.model.Type;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,11 +29,15 @@ public class AuthController {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
     @Autowired
+    private EmplacementService emplacementService;
+    @Autowired
+    private AdresseService adresseService;
+    @Autowired
     private AuthenticationManager authenticationManager;
     @Autowired
     private JWTGenerator jwtGenerator; // HERE Inject the jwt Generator
 
-    // LOGIN
+    // LOGIN V
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginDTO loginDTO) { // HERE update the return type
         Authentication authentication = authenticationManager.authenticate(
@@ -42,13 +51,14 @@ public class AuthController {
         //String token = userDetailsService.login(loginDTO);
         return new ResponseEntity<>(new AuthResponseDTO(token), HttpStatus.OK); // HERE update the return
     }
-    // ADMIN SIGNUP TODO (CHECK +EMPLACEMENT_PRINCIPAL) && FINISH
+    // ADMIN SIGNUP V
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterDTO registerDTO) {
         if(userDetailsService.isUsernameTaken(registerDTO.getUsername())) {
             return new ResponseEntity<>("Username is taken !", HttpStatus.BAD_REQUEST);
         }
         userDetailsService.register(registerDTO);
+
         return new ResponseEntity<>("User registered success!", HttpStatus.OK);
     }
     // TODO FORGET PASSWORD
